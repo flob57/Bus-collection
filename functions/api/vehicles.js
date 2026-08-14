@@ -28,6 +28,24 @@ function first(props, names) {
   return '';
 }
 
+function linkProperty(p) {
+  if (!p) return '';
+  if (p.type === 'url') return p.url || '';
+  if (p.type === 'rich_text') {
+    const item = p.rich_text?.find(x => x.href || x.text?.link?.url);
+    return item?.href || item?.text?.link?.url || '';
+  }
+  return '';
+}
+
+function firstLink(props, names) {
+  for (const name of names) {
+    const value = linkProperty(props[name]);
+    if (value) return value;
+  }
+  return '';
+}
+
 function imageProperty(p) {
   if (!p || p.type !== 'files') return '';
   const file = p.files?.[0];
@@ -36,12 +54,17 @@ function imageProperty(p) {
 
 function normalize(page, network) {
   const p = page.properties || {};
+  const common = {
+    id: page.id,
+    network,
+    notionUrl: page.url || '',
+    tcInfosUrl: firstLink(p, ['Fiche détaillée TC Infos', 'TC Infos', 'Lien TC Infos', 'TC Infos URL']),
+  };
 
   // TfL uses an English schema and stores the fleet number in "Fleet Number".
   if (network === 'tfl') {
     return {
-      id: page.id,
-      network,
+      ...common,
       park: String(first(p, ['Fleet Number']) || '—'),
       registration: String(first(p, ['Registration Number']) || '—'),
       brand: String(first(p, ['Chassis Make and Model  ', 'Chassis Make and Model']) || '—'),
@@ -54,8 +77,7 @@ function normalize(page, network) {
   }
 
   return {
-    id: page.id,
-    network,
+    ...common,
     park: String(first(p, ['No de parc', 'Numéro de parc', 'Parc', 'Numéro']) || '—'),
     registration: String(first(p, ['Immatriculation', 'Immatriculation ']) || '—'),
     brand: String(first(p, ['Constructeur', 'Marque']) || '—'),
