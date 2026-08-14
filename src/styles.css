@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
+
+:root { font-family: 'DM Sans', system-ui, sans-serif; color: #f7f7f4; background: #111313; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; background: radial-gradient(circle at 20% 0%, #292d2b 0, #111313 42%); }
+button { font: inherit; }
+.app { min-height: 100vh; max-width: 1100px; margin: 0 auto; padding: 28px 20px 36px; }
+.hero { padding: 34px 4px 42px; }
+.eyebrow, .section-title { letter-spacing: .22em; text-transform: uppercase; font-weight: 700; font-size: .76rem; color: #d7df00; }
+h1 { font-size: clamp(3.5rem, 10vw, 7rem); line-height: .88; margin: 18px 0; letter-spacing: -.055em; }
+h1 em { font-family: 'Playfair Display', Georgia, serif; font-weight: 600; }
+.hero p { max-width: 570px; color: #b9bfbc; font-size: 1.05rem; line-height: 1.6; }
+.networks { padding-top: 10px; }
+.network-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; margin-top: 18px; }
+.network-card { position: relative; min-height: 150px; border: 1px solid #343938; border-radius: 24px; padding: 24px; color: white; background: linear-gradient(145deg, #202423, #171a19); display: flex; align-items: center; gap: 18px; text-align: left; cursor: pointer; transition: transform .2s, border-color .2s; overflow: hidden; }
+.network-card::after { content: ''; position: absolute; width: 110px; height: 110px; right: -35px; bottom: -50px; border-radius: 50%; background: var(--accent); opacity: .15; }
+.network-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.network-badge { width: 58px; height: 58px; border-radius: 18px; background: var(--accent); display: grid; place-items: center; font-size: 1.65rem; flex: 0 0 auto; }
+.network-card h2 { margin: 0 0 5px; font-size: 1.25rem; }
+.network-card span { color: #aeb5b1; }
+.network-card .arrow { margin-left: auto; color: var(--accent); font-size: 1.5rem; position: relative; z-index: 1; }
+footer { margin-top: 50px; color: #6f7773; font-size: .78rem; }
+@media (max-width: 650px) { .app { padding: 18px 14px 28px; } .hero { padding: 28px 4px 34px; } .network-grid { grid-template-columns: 1fr; } .network-card { min-height: 125px; } }
