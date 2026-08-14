@@ -15,13 +15,15 @@ const demoVehicles = [
   { id: 'yelo-demo', network: 'yelo', park: '—', registration: '—', brand: '—', model: '—', type: 'Bus', date: '2026-01-01', status: 'En service', image: '' },
 ];
 
-function NetworkLogo({ network }) { return <div className="logo-mark" style={{ '--accent': network.accent }}>{network.logo}</div>; }
+function NetworkLogo({ network }) {
+  return <div className="logo-mark" style={{ '--accent': network.accent }}>{network.logo}</div>;
+}
 
 function Home({ onSelect }) {
   return <>
     <header className="hero"><div className="eyebrow">BUS COLLECTION</div><h1>Le patrimoine<br /><em>roulant.</em></h1><p>Ta collection personnelle d’autobus, autocars et tramways, réseau par réseau.</p></header>
     <section className="networks"><div className="section-title">Choisir un réseau</div><div className="network-grid">
-      {networks.map((network) => <button className="network-card" key={network.id} onClick={() => onSelect(network.id)} style={{ '--accent': network.accent }}><NetworkLogo network={network}/><div><h2>{network.name}</h2><span>{network.city}</span><p>{network.description}</p></div><span className="arrow">→</span></button>)}
+      {networks.map(network => <button className="network-card" key={network.id} onClick={() => onSelect(network.id)} style={{ '--accent': network.accent }}><NetworkLogo network={network}/><div><h2>{network.name}</h2><span>{network.city}</span><p>{network.description}</p></div><span className="arrow">→</span></button>)}
     </div></section>
   </>;
 }
@@ -35,27 +37,39 @@ function VehicleCard({ vehicle, accent }) {
 }
 
 function Collection({ networkId, onBack }) {
-  const network = networks.find((n) => n.id === networkId);
+  const network = networks.find(n => n.id === networkId);
   const [query, setQuery] = useState('');
   const [showRetired, setShowRetired] = useState(true);
   const [type, setType] = useState('Tous');
   const [vehicles, setVehicles] = useState(demoVehicles.filter(v => v.network === networkId));
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [synced, setSynced] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetch(`/api/vehicles?network=${networkId}`, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : Promise.reject(new Error('Notion non configuré')))
-      .then(data => { if (!cancelled && Array.isArray(data.vehicles)) { setVehicles(data.vehicles); setSynced(true); } })
-      .catch(() => { if (!cancelled) setSynced(false); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, [networkId]);
+  const loadVehicles = async () => {
+    setSyncing(true);
+    setError('');
+    try {
+      const response = await fetch(`/api/vehicles?network=${networkId}&t=${Date.now()}`, { cache: 'no-store' });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Erreur de synchronisation');
+      if (!Array.isArray(data.vehicles)) throw new Error('Réponse Notion invalide');
+      setVehicles(data.vehicles);
+      setSynced(true);
+    } catch (e) {
+      setSynced(false);
+      setError(e.message || 'Impossible de synchroniser Notion');
+    } finally {
+      setLoading(false);
+      setSyncing(false);
+    }
+  };
+
+  useEffect(() => { loadVehicles(); }, [networkId]);
 
   const types = ['Tous', ...new Set(vehicles.map(v => v.type).filter(Boolean))];
-  const filtered = useMemo(() => vehicles.filter((v) => {
+  const filtered = useMemo(() => vehicles.filter(v => {
     const haystack = `${v.park} ${v.registration} ${v.brand} ${v.model} ${v.type}`.toLowerCase();
     const retired = /réform|retir|hors/i.test(v.status || '');
     return haystack.includes(query.toLowerCase()) && (type === 'Tous' || v.type === type) && (showRetired || !retired);
@@ -64,12 +78,17 @@ function Collection({ networkId, onBack }) {
   return <>
     <header className="collection-head" style={{ '--accent': network.accent }}><button className="back" onClick={onBack}>← Accueil</button><div className="collection-brand"><NetworkLogo network={network}/><div><div className="eyebrow">COLLECTION</div><h1>{network.name}</h1><p>{network.city}</p></div></div></header>
     <section className="toolbar"><div className="search"><span>⌕</span><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Parc, immatriculation, marque, modèle…"/></div><div className="filters"><select value={type} onChange={e => setType(e.target.value)}>{types.map(t => <option key={t}>{t}</option>)}</select><button className={showRetired ? 'toggle active' : 'toggle'} onClick={() => setShowRetired(!showRetired)}>Réformés</button></div></section>
-    <div className="sync-line"><span>{loading ? 'Chargement…' : synced ? '● Synchronisé avec Notion' : '○ Mode aperçu — connexion Notion à configurer'}</span><button onClick={() => window.location.reload()}>↻ Actualiser</button></div>
+    <div className="sync-line"><span>{loading ? 'Chargement…' : synced ? '● Synchronisé avec Notion' : '○ Connexion Notion indisponible'}</span><button onClick={loadVehicles} disabled={syncing}>{syncing ? 'Synchronisation…' : '↻ Synchroniser'}</button></div>
+    {error && <div className="sync-error">{error}</div>}
     <div className="collection-note"><span>{filtered.length}</span> véhicule{filtered.length > 1 ? 's' : ''} · classés du plus récent au plus ancien</div>
     <section className="vehicle-grid">{filtered.map(vehicle => <VehicleCard key={vehicle.id} vehicle={vehicle} accent={network.accent}/>)}</section>
     {!loading && filtered.length === 0 && <div className="empty">Aucun véhicule ne correspond à ta recherche.</div>}
   </>;
 }
 
-function App() { const [networkId, setNetworkId] = useState(null); return <main className="app">{networkId ? <Collection networkId={networkId} onBack={() => setNetworkId(null)}/> : <Home onSelect={setNetworkId}/>}<footer>Collection privée · source de données : Notion</footer></main>; }
+function App() {
+  const [networkId, setNetworkId] = useState(null);
+  return <main className="app">{networkId ? <Collection networkId={networkId} onBack={() => setNetworkId(null)}/> : <Home onSelect={setNetworkId}/>}<footer>Collection privée · source de données : Notion</footer></main>;
+}
+
 createRoot(document.getElementById('root')).render(<App/>);
