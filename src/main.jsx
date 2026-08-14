@@ -28,12 +28,42 @@ function Home({ onSelect }) {
   </>;
 }
 
-function VehicleCard({ vehicle, accent }) {
+function VehicleCard({ vehicle, accent, onOpen }) {
   const retired = /réform|retir|hors/i.test(vehicle.status || '');
-  return <article className={`vehicle-card ${retired ? 'retired' : ''}`} style={{ '--accent': accent }}>
+  return <button className={`vehicle-card ${retired ? 'retired' : ''}`} style={{ '--accent': accent }} onClick={() => onOpen(vehicle)} aria-label={`Voir la fiche du véhicule ${vehicle.park}`}>
     <div className="vehicle-photo">{vehicle.image ? <img src={vehicle.image} alt={`${vehicle.brand} ${vehicle.model} ${vehicle.park}`} /> : <div className="no-photo"><span>📷</span><small>Photo à ajouter</small></div>}{retired && <b className="retired-badge">RÉFORMÉ</b>}</div>
-    <div className="vehicle-body"><div className="vehicle-title"><strong>#{vehicle.park}</strong><span>{vehicle.type}</span></div><h3>{vehicle.brand} {vehicle.model}</h3><div className="vehicle-meta"><div><small>IMMATRICULATION</small><b>{vehicle.registration || '—'}</b></div><div><small>MISE EN CIRCULATION</small><b>{vehicle.date || '—'}</b></div></div></div>
-  </article>;
+    <div className="vehicle-body"><div className="vehicle-title"><strong>#{vehicle.park}</strong><span>{vehicle.type}</span></div><h3>{vehicle.brand} {vehicle.model}</h3><div className="vehicle-meta"><div><small>IMMATRICULATION</small><b>{vehicle.registration || '—'}</b></div><div><small>MISE EN CIRCULATION</small><b>{vehicle.date || '—'}</b></div></div><div className="vehicle-more">Voir la fiche →</div></div>
+  </button>;
+}
+
+function VehicleDetails({ vehicle, network, onClose }) {
+  if (!vehicle) return null;
+  const fields = [
+    ['Numéro de parc', vehicle.park],
+    ['Immatriculation', vehicle.registration],
+    ['Constructeur', vehicle.brand],
+    ['Modèle', vehicle.model],
+    ['Type', vehicle.type],
+    ['Mise en circulation', vehicle.date],
+    ['Statut', vehicle.status],
+  ].filter(([, value]) => value && value !== '—');
+
+  return <div className="modal-backdrop" onMouseDown={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div className="vehicle-modal" role="dialog" aria-modal="true" aria-label={`Fiche ${vehicle.park}`}>
+      <button className="modal-close" onClick={onClose} aria-label="Fermer">×</button>
+      <div className="modal-photo">{vehicle.image ? <img src={vehicle.image} alt={`${vehicle.brand} ${vehicle.model}`} /> : <div className="no-photo"><span>📷</span><small>Photo à ajouter</small></div>}</div>
+      <div className="modal-content" style={{ '--accent': network.accent }}>
+        <div className="eyebrow">{network.name}</div>
+        <div className="modal-title"><strong>#{vehicle.park}</strong><span>{vehicle.type}</span></div>
+        <h2>{vehicle.brand} {vehicle.model}</h2>
+        <div className="detail-list">{fields.map(([label, value]) => <div key={label}><small>{label}</small><b>{value}</b></div>)}</div>
+        <div className="detail-links">
+          {vehicle.notionUrl && <a href={vehicle.notionUrl} target="_blank" rel="noreferrer">↗ Ouvrir dans Notion</a>}
+          {vehicle.tcInfosUrl && <a href={vehicle.tcInfosUrl} target="_blank" rel="noreferrer">↗ Voir la fiche TC Infos</a>}
+        </div>
+      </div>
+    </div>
+  </div>;
 }
 
 function Collection({ networkId, onBack }) {
@@ -42,6 +72,7 @@ function Collection({ networkId, onBack }) {
   const [showRetired, setShowRetired] = useState(true);
   const [type, setType] = useState('Tous');
   const [vehicles, setVehicles] = useState(demoVehicles.filter(v => v.network === networkId));
+  const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [synced, setSynced] = useState(false);
@@ -81,8 +112,9 @@ function Collection({ networkId, onBack }) {
     <div className="sync-line"><span>{loading ? 'Chargement…' : synced ? '● Synchronisé avec Notion' : '○ Connexion Notion indisponible'}</span><button onClick={loadVehicles} disabled={syncing}>{syncing ? 'Synchronisation…' : '↻ Synchroniser'}</button></div>
     {error && <div className="sync-error">{error}</div>}
     <div className="collection-note"><span>{filtered.length}</span> véhicule{filtered.length > 1 ? 's' : ''} · classés du plus récent au plus ancien</div>
-    <section className="vehicle-grid">{filtered.map(vehicle => <VehicleCard key={vehicle.id} vehicle={vehicle} accent={network.accent}/>)}</section>
+    <section className="vehicle-grid">{filtered.map(vehicle => <VehicleCard key={vehicle.id} vehicle={vehicle} accent={network.accent} onOpen={setSelectedVehicle}/>)}</section>
     {!loading && filtered.length === 0 && <div className="empty">Aucun véhicule ne correspond à ta recherche.</div>}
+    <VehicleDetails vehicle={selectedVehicle} network={network} onClose={() => setSelectedVehicle(null)} />
   </>;
 }
 
