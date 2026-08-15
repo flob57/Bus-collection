@@ -69,7 +69,7 @@ function normalize(page, network) {
     id: page.id,
     network,
     notionUrl: page.url || '',
-    tcInfosUrl: firstLink(p, ['Fiche détaillée TC Infos', 'TC Infos', 'Lien TC Infos', 'TC Infos URL']),
+    tcInfosUrl: firstLink(p, ['Source TC Infos', 'Fiche détaillée TC Infos', 'TC Infos', 'Lien TC Infos', 'TC Infos URL']),
   };
 
   const coverImage = pageCover(page);
