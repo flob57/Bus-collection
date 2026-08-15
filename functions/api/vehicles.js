@@ -52,6 +52,17 @@ function imageProperty(p) {
   return file?.external?.url || file?.file?.url || '';
 }
 
+// A Notion page cover is NOT a database property. It lives on page.cover.
+// Notion-hosted covers use temporary signed URLs, so we deliberately read the
+// current URL from the freshly queried page on every synchronization.
+function pageCover(page) {
+  const cover = page?.cover;
+  if (!cover) return '';
+  if (cover.type === 'external') return cover.external?.url || '';
+  if (cover.type === 'file') return cover.file?.url || '';
+  return '';
+}
+
 function normalize(page, network) {
   const p = page.properties || {};
   const common = {
@@ -60,6 +71,8 @@ function normalize(page, network) {
     notionUrl: page.url || '',
     tcInfosUrl: firstLink(p, ['Fiche détaillée TC Infos', 'TC Infos', 'Lien TC Infos', 'TC Infos URL']),
   };
+
+  const coverImage = pageCover(page);
 
   // TfL uses an English schema and stores the fleet number in "Fleet Number".
   if (network === 'tfl') {
@@ -72,7 +85,7 @@ function normalize(page, network) {
       type: String(first(p, ['Bus Type ', 'Bus Type']) || '—'),
       date: String(first(p, ['Registration date', 'Date de mise en circulation']) || ''),
       status: 'En service',
-      image: imageProperty(p['Fichiers et médias']) || imageProperty(p['Photo de couverture']) || imageProperty(p['Photo']) || '',
+      image: coverImage || imageProperty(p['Fichiers et médias']) || imageProperty(p['Photo de couverture']) || imageProperty(p['Photo']) || '',
     };
   }
 
@@ -85,7 +98,7 @@ function normalize(page, network) {
     type: String(first(p, ['Bus ou Tramway', 'Type', 'Type de véhicule']) || '—'),
     date: String(first(p, ['Mise en circulation', 'Date de mise en circulation', "Date d'arrivée"]) || ''),
     status: String(first(p, ['Statut TC Infos', 'Statut', 'État']) || 'En service'),
-    image: imageProperty(p['Photo de couverture']) || imageProperty(p['Photo']) || imageProperty(p['Fichiers et médias']) || '',
+    image: coverImage || imageProperty(p['Photo de couverture']) || imageProperty(p['Photo']) || imageProperty(p['Fichiers et médias']) || '',
   };
 }
 
