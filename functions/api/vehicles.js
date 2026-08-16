@@ -5,6 +5,15 @@ const NETWORK_KEYS = {
   tfl: 'NOTION_DS_TFL',
 };
 
+// Public Notion data-source IDs are kept here as a safety net so a single
+// missing Cloudflare variable cannot make one collection disappear.
+const DATA_SOURCE_FALLBACKS = {
+  bibus: '36493645-8361-81d5-aa65-000bfc2254ec',
+  lemet: '36493645-8361-8151-8160-000bb2a95b4b',
+  yelo: '3b593645-8361-8001-9b66-000b6f3f55ab',
+  tfl: '37293645-8361-81c0-8ebd-000bb403afce',
+};
+
 function textProperty(p) {
   if (!p) return '';
   if (p.type === 'title') return p.title?.map(x => x.plain_text).join('') || '';
@@ -52,9 +61,6 @@ function imageProperty(p) {
   return file?.external?.url || file?.file?.url || '';
 }
 
-// A Notion page cover is NOT a database property. It lives on page.cover.
-// Notion-hosted covers use temporary signed URLs, so we deliberately read the
-// current URL from the freshly queried page on every synchronization.
 function pageCover(page) {
   const cover = page?.cover;
   if (!cover) return '';
@@ -74,7 +80,6 @@ function normalize(page, network) {
 
   const coverImage = pageCover(page);
 
-  // TfL uses an English schema and stores the fleet number in "Fleet Number".
   if (network === 'tfl') {
     return {
       ...common,
@@ -142,9 +147,14 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  const dataSourceId = env[envName];
+  // Prefer the Cloudflare variable, but fall back to the known public data-source ID.
+  // The Notion token remains mandatory and is never exposed to the client.
+  const dataSourceId = env[envName] || DATA_SOURCE_FALLBACKS[network];
   if (!dataSourceId || !env.NOTION_TOKEN) {
-    return new Response(JSON.stringify({ error: 'Notion is not configured on Cloudflare yet.' }), {
+    return new Response(JSON.stringify({
+      error: 'Notion is not configured on Cloudflare yet.',
+      missing: !env.NOTION_TOKEN ? 'NOTION_TOKEN' : envName,
+    }), {
       status: 503,
       headers: { 'content-type': 'application/json' },
     });
