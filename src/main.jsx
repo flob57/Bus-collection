@@ -84,7 +84,10 @@ function Collection({ networkId, onBack }) {
     try {
       const response = await fetch(`/api/vehicles?network=${networkId}&t=${Date.now()}`, { cache: 'no-store' });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Erreur de synchronisation');
+      if (!response.ok) {
+        const diagnostic = [data.details, data.notionStatus ? `HTTP ${data.notionStatus}` : '', data.notionCode].filter(Boolean).join(' · ');
+        throw new Error([data.error || 'Erreur de synchronisation', diagnostic].filter(Boolean).join(' — '));
+      }
       if (!Array.isArray(data.vehicles)) throw new Error('Réponse Notion invalide');
       setVehicles(data.vehicles);
       setSynced(true);
