@@ -5,8 +5,6 @@ const NETWORK_KEYS = {
   tfl: 'NOTION_DS_TFL',
 };
 
-// Public Notion data-source IDs are kept here as a safety net so a single
-// missing Cloudflare variable cannot make one collection disappear.
 const DATA_SOURCE_FALLBACKS = {
   bibus: '36493645-8361-81d5-aa65-000bfc2254ec',
   lemet: '36493645-8361-8151-8160-000bb2a95b4b',
@@ -124,7 +122,13 @@ async function queryDataSource(dataSourceId, token) {
 
     if (!response.ok) {
       const body = await response.text();
-      throw new Error(body || `Notion returned ${response.status}`);
+      let parsed = null;
+      try { parsed = JSON.parse(body); } catch {}
+      const safeMessage = parsed?.message || parsed?.code || body || `Notion returned ${response.status}`;
+      const error = new Error(safeMessage);
+      error.notionStatus = response.status;
+      error.notionCode = parsed?.code || '';
+      throw error;
     }
 
     const data = await response.json();
@@ -147,8 +151,6 @@ export async function onRequestGet({ request, env }) {
     });
   }
 
-  // Prefer the Cloudflare variable, but fall back to the known public data-source ID.
-  // The Notion token remains mandatory and is never exposed to the client.
   const dataSourceId = env[envName] || DATA_SOURCE_FALLBACKS[network];
   if (!dataSourceId || !env.NOTION_TOKEN) {
     return new Response(JSON.stringify({
@@ -179,9 +181,11 @@ export async function onRequestGet({ request, env }) {
     return new Response(JSON.stringify({
       error: 'Unable to read Notion',
       details: error instanceof Error ? error.message : String(error),
+      notionStatus: error?.notionStatus || null,
+      notionCode: error?.notionCode || null,
     }), {
       status: 502,
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json; charset=utf-8' },
     });
   }
 }
