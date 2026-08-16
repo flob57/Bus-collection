@@ -3,10 +3,10 @@ import { createRoot } from 'react-dom/client';
 import './styles.css';
 
 const networks = [
-  { id: 'bibus', name: 'Bibus', city: 'Brest', accent: '#d7df00', deep: '#063b82', logo: 'BIBUS', description: 'Autobus, autocars et tramways du réseau brestois.', tagline: 'Le patrimoine roulant de Brest métropole.', intro: 'Explorez l’inventaire complet des autobus, autocars et tramways Bibus, des dernières mises en service aux véhicules qui ont marqué le réseau.' },
-  { id: 'lemet', name: 'TCRM / Le Met', city: 'Metz', accent: '#f5a400', deep: '#4a1768', logo: 'TCRM', description: 'Le parc historique et actuel du réseau messin.', tagline: 'Le patrimoine roulant de Metz Métropole.', intro: 'Explorez les autobus et autocars TCRM puis Le Met’, des véhicules les plus récents aux témoins de l’histoire du réseau.' },
-  { id: 'yelo', name: 'Yélo', city: 'La Rochelle', accent: '#ffd500', deep: '#25282a', logo: 'yélo', description: 'Le patrimoine roulant de La Rochelle.', tagline: 'Le patrimoine roulant de La Rochelle.', intro: 'Découvrez la collection complète des autobus et autocars Yélo, des nouvelles générations aux véhicules historiques du réseau rochelais.' },
-  { id: 'tfl', name: 'TfL London', city: 'London', accent: '#e21b2d', deep: '#b50917', logo: 'TfL', description: 'Bus londoniens et patrimoine du réseau TfL.', tagline: 'The rolling stock of London.', intro: 'Explore the complete inventory of TfL buses and coaches, from the latest vehicles in service to iconic models that shaped London transport.' },
+  { id: 'bibus', name: 'Bibus', city: 'Brest', accent: '#d7df00', deep: '#203b5e', logoUrl: 'https://files2.bibus.fr/s3fs-public/images/logo-bibus%20refait.png', heroImage: 'https://www.transbus.org/construc/mercedes-ecitaro-bibus.jpg', description: 'Autobus, autocars et tramways du réseau brestois.', tagline: 'Le patrimoine roulant de Brest métropole.', intro: 'Explorez l’inventaire complet des autobus, autocars et tramways Bibus, des dernières mises en service aux véhicules qui ont marqué le réseau.' },
+  { id: 'lemet', name: 'TCRM / Le Met', city: 'Metz', accent: '#f5b51b', deep: '#4b2168', logoUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/TCRM.jpg', heroImage: 'https://www.bus-bild.de/1200/frankreich--stadtbus-metz--151132.jpg', description: 'Le parc historique et actuel du réseau messin.', tagline: 'Le patrimoine roulant de Metz Métropole.', intro: 'Explorez les autobus et autocars TCRM puis Le Met’, des véhicules les plus récents aux témoins de l’histoire du réseau.' },
+  { id: 'yelo', name: 'Yélo', city: 'La Rochelle', accent: '#ffd500', deep: '#25282a', logoUrl: 'https://boutique-yelo.fr/_nuxt/logo_reseau.B4_Kg976.png', heroImage: 'https://www.transbus.org/actualite/actu-2023-bus-yelo-gare.jpg', description: 'Le patrimoine roulant de La Rochelle.', tagline: 'Le patrimoine roulant de La Rochelle.', intro: 'Découvrez la collection complète des autobus et autocars Yélo, des nouvelles générations aux véhicules historiques du réseau rochelais.' },
+  { id: 'tfl', name: 'TfL London', city: 'London', accent: '#e21b2d', deep: '#b50917', heroImage: '', description: 'Bus londoniens et patrimoine du réseau TfL.', tagline: 'The rolling stock of London.', intro: 'Explore the complete inventory of TfL buses and coaches, from the latest vehicles in service to iconic models that shaped London transport.' },
 ];
 
 const demoVehicles = [
@@ -16,17 +16,15 @@ const demoVehicles = [
 ];
 
 function NetworkLogo({ network }) {
-  if (network.id === 'tfl') return <div className="brand-logo tfl-logo"><span className="tfl-roundel"><i /></span><strong>TfL</strong></div>;
-  if (network.id === 'yelo') return <div className="brand-logo yelo-logo">yélo</div>;
-  if (network.id === 'lemet') return <div className="brand-logo tcrm-logo">TCRM<span>Le Met’</span></div>;
-  return <div className="brand-logo bibus-logo"><span className="bibus-symbol">b</span><strong>bibus</strong></div>;
+  if (network.logoUrl) return <img className={`brand-logo-img ${network.id}-logo-img`} src={network.logoUrl} alt={network.name} />;
+  return <div className="brand-logo tfl-logo"><span className="tfl-roundel"><i /></span><strong>TfL</strong></div>;
 }
 
 function Home({ onSelect }) {
   return <>
     <header className="home-hero"><div className="eyebrow">BUS COLLECTION</div><h1>Le patrimoine<br /><em>roulant.</em></h1><p>Ta collection personnelle d’autobus, autocars et tramways, réseau par réseau.</p></header>
     <section className="networks"><div className="section-title">Choisir un réseau</div><div className="network-grid">
-      {networks.map(network => <button className="network-card" key={network.id} onClick={() => onSelect(network.id)} style={{ '--accent': network.accent, '--deep': network.deep }}><NetworkLogo network={network}/><div><h2>{network.name}</h2><span>{network.city}</span><p>{network.description}</p></div><span className="arrow">→</span></button>)}
+      {networks.map(network => <button className="network-card" key={network.id} onClick={() => onSelect(network.id)} style={{ '--accent': network.accent, '--deep': network.deep, '--hero-image': network.heroImage ? `url(${network.heroImage})` : 'none' }}><NetworkLogo network={network}/><div><h2>{network.name}</h2><span>{network.city}</span><p>{network.description}</p></div><span className="arrow">→</span></button>)}
     </div></section>
   </>;
 }
@@ -93,9 +91,9 @@ function Collection({ networkId, onBack }) {
   const retiredCount = vehicles.filter(v => /réform|retir|hors/i.test(v.status || '')).length;
   const activeCount = vehicles.length - retiredCount;
 
-  return <div className={`network-page ${network.id}`} style={{ '--accent': network.accent, '--deep': network.deep }}>
+  return <div className={`network-page ${network.id}`} style={{ '--accent': network.accent, '--deep': network.deep, '--hero-image': network.heroImage ? `url(${network.heroImage})` : 'none' }}>
     <header className="collection-head"><div className="topbar"><button className="back" onClick={onBack}>←</button><NetworkLogo network={network}/><button className="sync-top" onClick={loadVehicles} disabled={syncing}>↻ <span>{syncing ? 'Synchronisation…' : 'Synchroniser'}</span></button></div>
-      <div className="collection-brand"><div><div className="eyebrow">{network.id === 'tfl' ? 'THE LONDON FLEET ALBUM' : `L’ALBUM DU PARC ${network.city.toUpperCase()}`}</div><h1>{network.tagline}</h1><p>{network.intro}</p></div></div>
+      <div className="collection-brand"><div className="hero-overlay"><div className="eyebrow">{network.id === 'tfl' ? 'THE LONDON FLEET ALBUM' : `L’ALBUM DU PARC ${network.city.toUpperCase()}`}</div><h1>{network.tagline}</h1><p>{network.intro}</p></div></div>
       <div className="stats"><div><strong>{vehicles.length}</strong><span>véhicules</span></div><div><strong>{retiredCount}</strong><span>réformés</span></div><div><strong>{activeCount}</strong><span>{network.id === 'tfl' ? 'bus & coaches' : 'bus & cars'}</span></div></div>
     </header>
     <section className="toolbar"><div className="search"><span>⌕</span><input value={query} onChange={e => setQuery(e.target.value)} placeholder={network.id === 'tfl' ? 'Registration, fleet no., make, model…' : 'Immatriculation, parc, marque, modèle…'}/></div><div className="filters"><select value={type} onChange={e => setType(e.target.value)}>{types.map(t => <option key={t}>{t}</option>)}</select><button className={showRetired ? 'toggle active' : 'toggle'} onClick={() => setShowRetired(!showRetired)}>{network.id === 'tfl' ? 'All statuses' : 'Réformés'}</button></div></section>
