@@ -12,6 +12,10 @@ const DATA_SOURCE_FALLBACKS = {
   tfl: '37293645-8361-81c0-8ebd-000bb403afce',
 };
 
+// Workers Free allows 50 external subrequests per invocation. Keep one request
+// below that ceiling and let the browser request the remaining Notion pages.
+const MAX_NOTION_REQUESTS_PER_INVOCATION = 45;
+
 function textProperty(p) {
   if (!p) return '';
   if (p.type === 'title') return p.title?.map(x => x.plain_text).join('') || '';
@@ -105,11 +109,14 @@ function normalize(page, network) {
   };
 }
 
-async function queryDataSource(dataSourceId, token) {
+async function queryDataSource(dataSourceId, token, initialCursor) {
   const result = [];
-  let start_cursor;
+  let start_cursor = initialCursor || null;
+  let requests = 0;
+  let has_more = false;
+  let next_cursor = null;
 
-  do {
+  while (requests < MAX_NOTION_REQUESTS_PER_INVOCATION) {
     const response = await fetch(`https://api.notion.com/v1/data_sources/${dataSourceId}/query`, {
       method: 'POST',
       headers: {
@@ -119,6 +126,7 @@ async function queryDataSource(dataSourceId, token) {
       },
       body: JSON.stringify({ page_size: 100, ...(start_cursor ? { start_cursor } : {}) }),
     });
+    requests += 1;
 
     if (!response.ok) {
       const body = await response.text();
@@ -133,15 +141,20 @@ async function queryDataSource(dataSourceId, token) {
 
     const data = await response.json();
     result.push(...(data.results || []));
-    start_cursor = data.has_more ? data.next_cursor : null;
-  } while (start_cursor);
+    has_more = Boolean(data.has_more);
+    next_cursor = data.next_cursor || null;
 
-  return result;
+    if (!has_more || !next_cursor) break;
+    start_cursor = next_cursor;
+  }
+
+  return { pages: result, has_more, next_cursor, requests };
 }
 
 export async function onRequestGet({ request, env }) {
   const url = new URL(request.url);
   const network = url.searchParams.get('network') || '';
+  const cursor = url.searchParams.get('cursor') || '';
   const envName = NETWORK_KEYS[network];
 
   if (!envName) {
@@ -163,7 +176,7 @@ export async function onRequestGet({ request, env }) {
   }
 
   try {
-    const pages = await queryDataSource(dataSourceId, env.NOTION_TOKEN);
+    const { pages, has_more, next_cursor, requests } = await queryDataSource(dataSourceId, env.NOTION_TOKEN, cursor);
     const vehicles = pages.map(page => normalize(page, network));
     vehicles.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
@@ -171,6 +184,9 @@ export async function onRequestGet({ request, env }) {
       network,
       count: vehicles.length,
       vehicles,
+      has_more,
+      next_cursor,
+      requests,
     }), {
       headers: {
         'content-type': 'application/json; charset=utf-8',
