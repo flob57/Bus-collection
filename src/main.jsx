@@ -82,14 +82,33 @@ function Collection({ networkId, onBack }) {
     setSyncing(true);
     setError('');
     try {
-      const response = await fetch(`/api/vehicles?network=${networkId}&t=${Date.now()}`, { cache: 'no-store' });
-      const data = await response.json();
-      if (!response.ok) {
-        const diagnostic = [data.details, data.notionStatus ? `HTTP ${data.notionStatus}` : '', data.notionCode].filter(Boolean).join(' · ');
-        throw new Error([data.error || 'Erreur de synchronisation', diagnostic].filter(Boolean).join(' — '));
-      }
-      if (!Array.isArray(data.vehicles)) throw new Error('Réponse Notion invalide');
-      setVehicles(data.vehicles);
+      let cursor = '';
+      let allVehicles = [];
+      let safety = 0;
+
+      // TfL currently contains thousands of Notion pages. The API endpoint
+      // deliberately returns a bounded batch so Cloudflare Workers Free stays
+      // below its 50-subrequest limit. Continue with the returned cursor until
+      // the whole data source has been read.
+      do {
+        const params = new URLSearchParams({ network: networkId, t: String(Date.now()) });
+        if (cursor) params.set('cursor', cursor);
+
+        const response = await fetch(`/api/vehicles?${params.toString()}`, { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) {
+          const diagnostic = [data.details, data.notionStatus ? `HTTP ${data.notionStatus}` : '', data.notionCode].filter(Boolean).join(' · ');
+          throw new Error([data.error || 'Erreur de synchronisation', diagnostic].filter(Boolean).join(' — '));
+        }
+        if (!Array.isArray(data.vehicles)) throw new Error('Réponse Notion invalide');
+
+        allVehicles.push(...data.vehicles);
+        cursor = data.has_more && data.next_cursor ? data.next_cursor : '';
+        safety += 1;
+        if (safety > 20) throw new Error('Synchronisation interrompue : trop de pages Notion.');
+      } while (cursor);
+
+      setVehicles(allVehicles);
       setSynced(true);
     } catch (e) {
       setSynced(false);
