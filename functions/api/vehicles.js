@@ -14,8 +14,6 @@ const DATA_SOURCE_FALLBACKS = {
   tfl: '37293645-8361-81c0-8ebd-000bb403afce',
 };
 
-// Workers Free allows 50 external subrequests per invocation. Keep one request
-// below that ceiling and let the browser request the remaining Notion pages.
 const MAX_NOTION_REQUESTS_PER_INVOCATION = 45;
 
 function textProperty(p) {
@@ -79,7 +77,8 @@ function normalize(page, network) {
     id: page.id,
     network,
     notionUrl: page.url || '',
-    tcInfosUrl: firstLink(p, ['Source TC Infos', 'Fiche détaillée TC Infos', 'TC Infos', 'Lien TC Infos', 'TC Infos URL']),
+    tcInfosUrl: firstLink(p, ['TC Infos', 'Source TC Infos', 'Fiche détaillée TC Infos', 'Lien TC Infos', 'TC Infos URL']),
+    fotobusUrl: firstLink(p, ['Fotobus', 'Fiche Fotobus', 'URL Fotobus', 'Fotobus URL', 'Source Fotobus']),
   };
 
   const coverImage = pageCover(page);
@@ -145,7 +144,6 @@ async function queryDataSource(dataSourceId, token, initialCursor) {
     result.push(...(data.results || []));
     has_more = Boolean(data.has_more);
     next_cursor = data.next_cursor || null;
-
     if (!has_more || !next_cursor) break;
     start_cursor = next_cursor;
   }
@@ -160,21 +158,12 @@ export async function onRequestGet({ request, env }) {
   const envName = NETWORK_KEYS[network];
 
   if (!envName) {
-    return new Response(JSON.stringify({ error: 'Unknown network' }), {
-      status: 400,
-      headers: { 'content-type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ error: 'Unknown network' }), { status: 400, headers: { 'content-type': 'application/json' } });
   }
 
   const dataSourceId = env[envName] || DATA_SOURCE_FALLBACKS[network];
   if (!dataSourceId || !env.NOTION_TOKEN) {
-    return new Response(JSON.stringify({
-      error: 'Notion is not configured on Cloudflare yet.',
-      missing: !env.NOTION_TOKEN ? 'NOTION_TOKEN' : envName,
-    }), {
-      status: 503,
-      headers: { 'content-type': 'application/json' },
-    });
+    return new Response(JSON.stringify({ error: 'Notion is not configured on Cloudflare yet.', missing: !env.NOTION_TOKEN ? 'NOTION_TOKEN' : envName }), { status: 503, headers: { 'content-type': 'application/json' } });
   }
 
   try {
@@ -182,26 +171,11 @@ export async function onRequestGet({ request, env }) {
     const vehicles = pages.map(page => normalize(page, network));
     vehicles.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
 
-    return new Response(JSON.stringify({
-      network,
-      count: vehicles.length,
-      vehicles,
-      has_more,
-      next_cursor,
-      requests,
-    }), {
-      headers: {
-        'content-type': 'application/json; charset=utf-8',
-        'cache-control': 'no-store',
-      },
+    return new Response(JSON.stringify({ network, count: vehicles.length, vehicles, has_more, next_cursor, requests }), {
+      headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({
-      error: 'Unable to read Notion',
-      details: error instanceof Error ? error.message : String(error),
-      notionStatus: error?.notionStatus || null,
-      notionCode: error?.notionCode || null,
-    }), {
+    return new Response(JSON.stringify({ error: 'Unable to read Notion', details: error instanceof Error ? error.message : String(error), notionStatus: error?.notionStatus || null, notionCode: error?.notionCode || null }), {
       status: 502,
       headers: { 'content-type': 'application/json; charset=utf-8' },
     });
