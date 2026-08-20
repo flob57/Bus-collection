@@ -1,7 +1,8 @@
 name: Apply network grouping
 
 on:
-  push:
+  pull_request:
+    types: [opened]
     branches: [main]
 
 permissions:
@@ -9,11 +10,11 @@ permissions:
 
 jobs:
   migrate:
-    if: ${{ !contains(github.event.head_commit.message, 'Organize networks by department') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
       - name: Update application
@@ -109,4 +110,4 @@ jobs:
           rm -f .github/workflows/apply-network-grouping.yml
           git add -A
           git commit -m "Organize networks by department"
-          git push
+          git push origin HEAD:${{ github.event.pull_request.head.ref }}
