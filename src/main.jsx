@@ -3,11 +3,11 @@ import { createRoot } from 'react-dom/client';
 import './styles.css';
 
 const networks = [
-  { id: 'bibus', name: 'Bibus', city: 'Brest', accent: '#d7df00', deep: '#203b5e', logoUrl: 'https://files2.bibus.fr/s3fs-public/images/logo-bibus%20refait.png', heroImage: 'https://www.transbus.org/construc/mercedes-ecitaro-bibus.jpg', description: 'Autobus, autocars et tramways du réseau brestois.', tagline: 'Le patrimoine roulant de Brest métropole.', intro: 'Explorez l’inventaire complet des autobus, autocars et tramways Bibus, des dernières mises en service aux véhicules qui ont marqué le réseau.' },
-  { id: 'lemet', name: 'TCRM / Le Met', city: 'Metz', accent: '#f5b51b', deep: '#4b2168', logoUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/TCRM.jpg', heroImage: 'https://www.bus-bild.de/1200/frankreich--stadtbus-metz--151132.jpg', description: 'Le parc historique et actuel du réseau messin.', tagline: 'Le patrimoine roulant de Metz Métropole.', intro: 'Explorez les autobus et autocars TCRM puis Le Met’, des véhicules les plus récents aux témoins de l’histoire du réseau.' },
-  { id: 'yelo', name: 'Yélo', city: 'La Rochelle', accent: '#ffd500', deep: '#25282a', logoUrl: 'https://boutique-yelo.fr/_nuxt/logo_reseau.B4_Kg976.png', heroImage: 'https://www.transbus.org/actualite/actu-2023-bus-yelo-gare.jpg', description: 'Le patrimoine roulant de La Rochelle.', tagline: 'Le patrimoine roulant de La Rochelle.', intro: 'Découvrez la collection complète des autobus et autocars Yélo, des nouvelles générations aux véhicules historiques du réseau rochelais.' },
-  { id: 'ocecars', name: 'Océcars', city: 'La Rochelle', accent: '#008c95', deep: '#12344d', logoUrl: '', heroImage: '', description: 'Le parc d’autocars d’Océcars – Transdev.', tagline: 'Le patrimoine roulant d’Océcars.', intro: 'Explorez le parc d’autocars d’Océcars – Transdev à La Rochelle, des véhicules actuellement exploités aux véhicules historiques recensés dans Notion.' },
-  { id: 'tfl', name: 'TfL London', city: 'London', accent: '#e21b2d', deep: '#b50917', logoUrl: '', heroImage: '', description: 'Bus londoniens et patrimoine du réseau TfL.', tagline: 'The rolling stock of London.', intro: 'Explore the complete inventory of TfL buses and coaches, from the latest vehicles in service to iconic models that shaped London transport.' },
+  { id: 'bibus', name: 'Bibus', city: 'Brest', departmentCode: 29, departmentName: 'Finistère', accent: '#d7df00', deep: '#203b5e', logoUrl: 'https://files2.bibus.fr/s3fs-public/images/logo-bibus%20refait.png', heroImage: 'https://www.transbus.org/construc/mercedes-ecitaro-bibus.jpg', description: 'Autobus, autocars et tramways du réseau brestois.', tagline: 'Le patrimoine roulant de Brest métropole.', intro: 'Explorez l’inventaire complet des autobus, autocars et tramways Bibus, des dernières mises en service aux véhicules qui ont marqué le réseau.' },
+  { id: 'lemet', name: 'TCRM / Le Met', city: 'Metz', departmentCode: 57, departmentName: 'Moselle', accent: '#f5b51b', deep: '#4b2168', logoUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/TCRM.jpg', heroImage: 'https://www.bus-bild.de/1200/frankreich--stadtbus-metz--151132.jpg', description: 'Le parc historique et actuel du réseau messin.', tagline: 'Le patrimoine roulant de Metz Métropole.', intro: 'Explorez les autobus et autocars TCRM puis Le Met’, des véhicules les plus récents aux témoins de l’histoire du réseau.' },
+  { id: 'yelo', name: 'Yélo', city: 'La Rochelle', departmentCode: 17, departmentName: 'Charente-Maritime', accent: '#ffd500', deep: '#25282a', logoUrl: 'https://boutique-yelo.fr/_nuxt/logo_reseau.B4_Kg976.png', heroImage: 'https://www.transbus.org/actualite/actu-2023-bus-yelo-gare.jpg', description: 'Le patrimoine roulant de La Rochelle.', tagline: 'Le patrimoine roulant de La Rochelle.', intro: 'Découvrez la collection complète des autobus et autocars Yélo, des nouvelles générations aux véhicules historiques du réseau rochelais.' },
+  { id: 'ocecars', name: 'Océcars Transdev', city: 'La Rochelle', departmentCode: 17, departmentName: 'Charente-Maritime', accent: '#008c95', deep: '#12344d', logoUrl: '', heroImage: '', description: 'Le parc d’autocars d’Océcars – Transdev.', tagline: 'Le patrimoine roulant d’Océcars.', intro: 'Explorez le parc d’autocars d’Océcars – Transdev à La Rochelle, des véhicules actuellement exploités aux véhicules historiques recensés dans Notion.' },
+  { id: 'tfl', name: 'TfL London', city: 'London', departmentCode: null, departmentName: 'Royaume-Uni · Londres', accent: '#e21b2d', deep: '#b50917', logoUrl: '', heroImage: '', description: 'Bus londoniens et patrimoine du réseau TfL.', tagline: 'The rolling stock of London.', intro: 'Explore the complete inventory of TfL buses and coaches, from the latest vehicles in service to iconic models that shaped London transport.' },
 ];
 
 const demoVehicles = [
@@ -23,7 +23,43 @@ function NetworkLogo({ network }) {
 }
 
 function Home({ onSelect }) {
-  return <><header className="home-hero"><div className="eyebrow">BUS COLLECTION</div><h1>Le patrimoine<br /><em>roulant.</em></h1><p>Ta collection personnelle d’autobus, autocars et tramways, réseau par réseau.</p></header><section className="networks"><div className="section-title">Choisir un réseau</div><div className="network-grid">{networks.map(network => <button className="network-card" key={network.id} onClick={() => onSelect(network.id)} style={{ '--accent': network.accent, '--deep': network.deep, '--hero-image': network.heroImage ? `url(${network.heroImage})` : 'none' }}><NetworkLogo network={network}/><div><h2>{network.name}</h2><span>{network.city}</span><p>{network.description}</p></div><span className="arrow">→</span></button>)}</div></section></>;
+  const groups = Object.values(networks.reduce((acc, network) => {
+    const key = network.departmentCode == null ? 'other' : String(network.departmentCode).padStart(2, '0');
+    if (!acc[key]) acc[key] = { key, code: network.departmentCode, name: network.departmentName, networks: [] };
+    acc[key].networks.push(network);
+    return acc;
+  }, {})).sort((a, b) => {
+    if (a.code == null) return 1;
+    if (b.code == null) return -1;
+    return a.code - b.code;
+  });
+  groups.forEach(group => group.networks.sort((a, b) => a.name.localeCompare(b.name, 'fr', { sensitivity: 'base' })));
+
+  const jumpTo = value => {
+    if (!value) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    document.getElementById(`department-${value}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  return <>
+    <header className="home-hero"><div className="eyebrow">BUS COLLECTION</div><h1>Le patrimoine<br /><em>roulant.</em></h1><p>Ta collection personnelle d’autobus, autocars et tramways, réseau par réseau.</p></header>
+    <section className="networks">
+      <div className="department-nav">
+        <label htmlFor="department-jump"><span>ACCÈS RAPIDE</span> Choisir un département</label>
+        <select id="department-jump" defaultValue="" onChange={e => jumpTo(e.target.value)}>
+          <option value="">Tous les réseaux</option>
+          {groups.map(group => <option key={group.key} value={group.key}>{group.code != null ? `${String(group.code).padStart(2, '0')} — ` : ''}{group.name}</option>)}
+        </select>
+      </div>
+      <div className="section-title">Réseaux par département</div>
+      {groups.map(group => <section className="department-section" id={`department-${group.key}`} key={group.key}>
+        <div className="department-heading"><strong>{group.code != null ? String(group.code).padStart(2, '0') : '•'}</strong><div><h2>{group.name}</h2><span>{group.networks.length} réseau{group.networks.length > 1 ? 'x' : ''}</span></div></div>
+        <div className="network-grid">{group.networks.map(network => <button className="network-card" key={network.id} onClick={() => onSelect(network.id)} style={{ '--accent': network.accent, '--deep': network.deep, '--hero-image': network.heroImage ? `url(${network.heroImage})` : 'none' }}><NetworkLogo network={network}/><div><h2>{network.name}</h2><span>{network.city}</span><p>{network.description}</p></div><span className="arrow">→</span></button>)}</div>
+      </section>)}
+    </section>
+  </>;
 }
 
 function VehicleCard({ vehicle, accent, onOpen }) {
