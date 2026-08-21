@@ -1,0 +1,35 @@
+/* Final UI fixes for the network list */
+
+/* The department selector must not float over the collection while scrolling. */
+.department-nav {
+  position: static !important;
+  top: auto !important;
+  z-index: auto !important;
+}
+
+/* Keep the selector in the flow on small screens as well. */
+@media (max-width: 700px) {
+  .department-nav {
+    position: static !important;
+    margin-bottom: 26px !important;
+  }
+}
+
+/* Use the supplied local TCRM artwork instead of the external Wikimedia image. */
+.lemet-logo-img {
+  content: url('/logos/tcrm.svg') !important;
+  object-fit: contain !important;
+}
+
+/* Use the supplied local Océcars Transdev artwork. */
+.text-logo {
+  background-image: url('/logos/ocecars.svg') !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: contain !important;
+}
+
+/* Slightly more breathing room between the selector and the first department. */
+.department-nav + .section-title {
+  margin-top: 8px;
+}
