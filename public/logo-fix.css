@@ -1,0 +1,5 @@
+/* Final logo + department navigation fixes */
+.lemet-logo-img{content:none!important;object-fit:contain!important;background:url('/logos/tcrm-safe.svg') center/contain no-repeat!important;}
+.text-logo{background:url('/logos/ocecars-safe.svg') center/contain no-repeat!important;}
+.department-nav{position:relative!important;top:auto!important;z-index:20;}
+@media(max-width:700px){.department-nav{position:relative!important;top:auto!important;}}
