@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#e66a00">
+<title>QUB · Bus Collection</title>
+<style>
+:root{font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#171717;background:#f5f2ec}*{box-sizing:border-box}body{margin:0}.hero{background:linear-gradient(135deg,#e66a00,#f2a000);color:white;padding:22px clamp(18px,5vw,70px) 34px}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.back,.sync{border:0;border-radius:999px;padding:10px 15px;background:#ffffff22;color:white;font-weight:700;cursor:pointer}.brand{font-weight:900;letter-spacing:.04em;font-size:22px}.eyebrow{font-size:11px;letter-spacing:.16em;font-weight:800;opacity:.8;margin-top:35px}.hero h1{font-size:clamp(34px,7vw,72px);line-height:.95;margin:8px 0}.hero p{max-width:720px;opacity:.9}.stats{display:flex;gap:28px;margin-top:28px}.stat strong{display:block;font-size:28px}.stat span{font-size:12px;text-transform:uppercase;opacity:.8}.tools{position:sticky;top:0;background:#f5f2ecdd;backdrop-filter:blur(12px);padding:14px clamp(18px,5vw,70px);z-index:2}.search{width:100%;padding:13px 16px;border:1px solid #d5d0c7;border-radius:14px;background:white;font-size:16px}.grid{padding:24px clamp(18px,5vw,70px) 70px;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}.card{background:white;border:1px solid #e1ddd5;border-radius:18px;overflow:hidden;box-shadow:0 5px 18px #0000000b}.photo{height:125px;background:linear-gradient(135deg,#eee,#ddd);display:grid;place-items:center;color:#777;font-size:42px}.body{padding:16px}.park{font-size:13px;color:#e66a00;font-weight:900}.model{font-size:18px;font-weight:800;margin:7px 0}.meta{font-size:13px;line-height:1.55;color:#555}.links{margin-top:12px}.links a{color:#e66a00;text-decoration:none;font-weight:700;font-size:13px}.empty{text-align:center;padding:50px}.loading{text-align:center;padding:60px;font-weight:700}@media(max-width:600px){.stats{gap:18px}.grid{grid-template-columns:1fr}.tools{position:static}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="top"><button class="back" onclick="location.href='/'">← Bus Collection</button><div class="brand">QUB</div><button class="sync" id="sync">↻ Synchroniser</button></div><div class="eyebrow">QUIMPER · FINISTÈRE</div><h1>Le parc roulant QUB.</h1><p>Les autobus, autocars et véhicules spécialisés recensés dans ta base Notion, synchronisés directement avec celle-ci.</p><div class="stats"><div class="stat"><strong id="count">—</strong><span>véhicules</span></div><div class="stat"><strong>Quimper</strong><span>réseau</span></div><div class="stat"><strong>RDQBO</strong><span>exploitant urbain</span></div></div></header>
+<section class="tools"><input class="search" id="search" placeholder="Immatriculation, parc, marque, modèle…"></section>
+<main id="app" class="loading">Chargement du parc QUB…</main>
+<script>
+let vehicles=[];
+const app=document.getElementById('app'),count=document.getElementById('count'),search=document.getElementById('search'),sync=document.getElementById('sync');
+function esc(s){return String(s??'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function render(){const q=search.value.trim().toLowerCase();const list=vehicles.filter(v=>`${v.park} ${v.registration} ${v.brand} ${v.model} ${v.operator} ${v.depot}`.toLowerCase().includes(q));app.className='grid';app.innerHTML=list.map(v=>`<article class="card"><div class="photo">🚌</div><div class="body"><div class="park">PARC ${esc(v.park)}</div><div class="model">${esc(v.brand)} ${esc(v.model)}</div><div class="meta"><b>${esc(v.registration)}</b><br>Mise en circulation : ${esc(v.circulationDate||'—')}<br>Arrivée réseau : ${esc(v.arrivalDate||'—')}<br>${esc(v.operator||'')} · ${esc(v.depot||'')}</div><div class="links"><a href="${esc(v.url)}" target="_blank">↗ Ouvrir dans Notion</a></div></div></article>`).join('')||'<div class="empty">Aucun véhicule trouvé.</div>';}
+async function load(){sync.disabled=true;sync.textContent='↻ Synchronisation…';app.className='loading';app.textContent='Chargement du parc QUB…';try{const r=await fetch('/api/qub?ts='+Date.now(),{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.details||d.error||'Erreur');vehicles=d.vehicles||[];count.textContent=vehicles.length;render()}catch(e){app.className='empty';app.innerHTML='<h2>Impossible de synchroniser</h2><p>'+esc(e.message)+'</p>'}finally{sync.disabled=false;sync.textContent='↻ Synchroniser'}}
+search.addEventListener('input',render);sync.addEventListener('click',load);load();
+</script>
+</body>
+</html>
