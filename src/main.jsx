@@ -4,6 +4,7 @@ import './styles.css';
 
 const networks = [
   { id: 'bibus', name: 'Bibus', city: 'Brest', departmentCode: 29, departmentName: 'Finistère', accent: '#d7df00', deep: '#203b5e', logoUrl: 'https://files2.bibus.fr/s3fs-public/images/logo-bibus%20refait.png', heroImage: 'https://www.transbus.org/construc/mercedes-ecitaro-bibus.jpg', description: 'Autobus, autocars et tramways du réseau brestois.', tagline: 'Le patrimoine roulant de Brest métropole.', intro: 'Explorez l’inventaire complet des autobus, autocars et tramways Bibus, des dernières mises en service aux véhicules qui ont marqué le réseau.' },
+  { id: 'qub', name: 'QUB', city: 'Quimper', departmentCode: 29, departmentName: 'Finistère', accent: '#e7d500', deep: '#263b44', logoUrl: '', heroImage: '', description: 'Le parc des autobus, autocars et véhicules spécialisés du réseau QUB.', tagline: 'Le patrimoine roulant de Quimper.', intro: 'Explorez l’inventaire des autobus, autocars et véhicules spécialisés du réseau QUB, avec les informations issues de votre base Notion.' },
   { id: 'lemet', name: 'TCRM / Le Met', city: 'Metz', departmentCode: 57, departmentName: 'Moselle', accent: '#f5b51b', deep: '#4b2168', logoUrl: 'https://commons.wikimedia.org/wiki/Special:Redirect/file/TCRM.jpg', heroImage: 'https://www.bus-bild.de/1200/frankreich--stadtbus-metz--151132.jpg', description: 'Le parc historique et actuel du réseau messin.', tagline: 'Le patrimoine roulant de Metz Métropole.', intro: 'Explorez les autobus et autocars TCRM puis Le Met’, des véhicules les plus récents aux témoins de l’histoire du réseau.' },
   { id: 'yelo', name: 'Yélo', city: 'La Rochelle', departmentCode: 17, departmentName: 'Charente-Maritime', accent: '#ffd500', deep: '#25282a', logoUrl: 'https://boutique-yelo.fr/_nuxt/logo_reseau.B4_Kg976.png', heroImage: 'https://www.transbus.org/actualite/actu-2023-bus-yelo-gare.jpg', description: 'Le patrimoine roulant de La Rochelle.', tagline: 'Le patrimoine roulant de La Rochelle.', intro: 'Découvrez la collection complète des autobus et autocars Yélo, des nouvelles générations aux véhicules historiques du réseau rochelais.' },
   { id: 'ocecars', name: 'Océcars Transdev', city: 'La Rochelle', departmentCode: 17, departmentName: 'Charente-Maritime', accent: '#008c95', deep: '#12344d', logoUrl: '', heroImage: '', description: 'Le parc d’autocars d’Océcars – Transdev.', tagline: 'Le patrimoine roulant d’Océcars.', intro: 'Explorez le parc d’autocars d’Océcars – Transdev à La Rochelle, des véhicules actuellement exploités aux véhicules historiques recensés dans Notion.' },
@@ -19,6 +20,7 @@ const demoVehicles = [
 function NetworkLogo({ network }) {
   if (network.logoUrl) return <img className={`brand-logo-img ${network.id}-logo-img`} src={network.logoUrl} alt={network.name} />;
   if (network.id === 'ocecars') return <div className="brand-logo text-logo"><strong>Océcars</strong><span>TRANSDEV</span></div>;
+  if (network.id === 'qub') return <div className="brand-logo text-logo"><strong>QUB</strong><span>QUIMPER</span></div>;
   return <div className="brand-logo tfl-logo"><span className="tfl-roundel"><i /></span><strong>TfL</strong></div>;
 }
 
